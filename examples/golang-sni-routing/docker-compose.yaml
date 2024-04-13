@@ -1,0 +1,42 @@
+services:
+
+  proxy:
+    build:
+      context: .
+      dockerfile: ../shared/envoy/Dockerfile
+      target: envoy-go
+      args:
+        ENVOY_VARIANT: contrib-dev
+    depends_on:
+    - echo_service
+    - postgres1
+    - postgres2
+    ports:
+    #- "${PORT_PROXY:-5432}:5432"
+    - "${PORT_PROXY:-10000}:10000"
+
+  echo_service:
+    build:
+      context: .
+      dockerfile: Dockerfile-echo
+    hostname: echo_service
+
+  postgres1:
+    command: ["postgres", "-c", "config_file=/etc/postgresql.conf"]
+    build:
+      context: ../shared/postgres
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - ./ssl:/etc/jonas
+      - ./config/postgres.conf:/etc/postgresql.conf
+
+  postgres2:
+    command: ["postgres", "-c", "config_file=/etc/postgresql.conf"]
+    build:
+      context: ../shared/postgres
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - ./ssl:/etc/jonas
+      - ./config/postgres.conf:/etc/postgresql.conf
